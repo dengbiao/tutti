@@ -377,6 +377,7 @@ export interface AgentGUIViewLabels {
   usageContextWindowLabel: string;
   usageTokensLabel: string;
   usageLimitsLabel: string;
+  compactContextLabel: string;
   usageCompactAction: string;
   planImplementationLead: string;
   planImplementationConfirm: string;
@@ -1890,6 +1891,7 @@ const AgentGUIDetailPane = memo(function AgentGUIDetailPane({
       usageContextWindowLabel: labels.usageContextWindowLabel,
       usageTokensLabel: labels.usageTokensLabel,
       usageLimitsLabel: labels.usageLimitsLabel,
+      compactContextLabel: labels.compactContextLabel,
       fileMentionPalette: labels.fileMentionPalette,
       fileMentionLoading: labels.fileMentionLoading,
       fileMentionEmpty: labels.fileMentionEmpty,
@@ -1988,6 +1990,7 @@ const AgentGUIDetailPane = memo(function AgentGUIDetailPane({
       labels.usageChipLabel,
       labels.usageContextWindowLabel,
       labels.usageLimitsLabel,
+      labels.compactContextLabel,
       labels.usagePopoverTitle,
       labels.usageTokensLabel,
       labels.stop,

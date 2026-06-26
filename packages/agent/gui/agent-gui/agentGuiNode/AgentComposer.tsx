@@ -275,6 +275,7 @@ export interface AgentComposerProps {
     usageContextWindowLabel: string;
     usageTokensLabel: string;
     usageLimitsLabel: string;
+    compactContextLabel: string;
     approvalLead: string;
     planLead: string;
     planModes: Array<{ id: string; label: string; description: string }>;
@@ -452,13 +453,17 @@ function AgentUsageChip({
   totalTokens,
   limits,
   labels,
-  tooltipsEnabled = true
+  tooltipsEnabled = true,
+  onCompact,
+  compactEnabled
 }: {
   percentUsed: number;
   usedTokens: number | null;
   totalTokens: number | null;
   limits: readonly AgentComposerSlashStatusLimit[];
   tooltipsEnabled?: boolean;
+  onCompact?: () => void;
+  compactEnabled?: boolean;
   labels: Pick<
     AgentComposerProps["labels"],
     | "usageChipLabel"
@@ -466,6 +471,7 @@ function AgentUsageChip({
     | "usagePopoverTitle"
     | "usageContextWindowLabel"
     | "usageLimitsLabel"
+    | "compactContextLabel"
   >;
 }): React.JSX.Element {
   "use memo";
@@ -543,6 +549,16 @@ function AgentUsageChip({
                 />
               ))}
             </div>
+          ) : null}
+          {compactEnabled && onCompact ? (
+            <button
+              type="button"
+              data-testid="agent-gui-compact-button"
+              className="nodrag inline-flex items-center justify-center rounded-[6px] bg-[var(--transparency-block)] px-2 py-1 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-background-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [-webkit-app-region:no-drag]"
+              onClick={onCompact}
+            >
+              {labels.compactContextLabel}
+            </button>
           ) : null}
         </div>
       </PopoverContent>
@@ -2737,12 +2753,19 @@ export function AgentComposer({
                   totalTokens={usage.totalTokens}
                   limits={slashStatus?.limits ?? []}
                   tooltipsEnabled={!previewMode}
+                  compactEnabled={
+                    (compactSupported ?? false) &&
+                    hasCompactableContext &&
+                    !settingsControlsDisabled
+                  }
+                  onCompact={() => onSubmit(textPromptContent("/compact"))}
                   labels={{
                     usageChipLabel: labels.usageChipLabel,
                     usageTooltipLabel: labels.usageTooltipLabel,
                     usagePopoverTitle: labels.usagePopoverTitle,
                     usageContextWindowLabel: labels.usageContextWindowLabel,
-                    usageLimitsLabel: labels.usageLimitsLabel
+                    usageLimitsLabel: labels.usageLimitsLabel,
+                    compactContextLabel: labels.compactContextLabel
                   }}
                 />
               ) : null}

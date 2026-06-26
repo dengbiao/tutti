@@ -1951,6 +1951,7 @@ function createLabels(): AgentGUIViewLabels {
     usageContextWindowLabel: "usageContextWindowLabel",
     usageTokensLabel: "usageTokensLabel",
     usageLimitsLabel: "usageLimitsLabel",
+    compactContextLabel: "compactContextLabel",
     usageCompactAction: "usageCompactAction",
     planImplementationLead: "planImplementationLead",
     planImplementationConfirm: "planImplementationConfirm",

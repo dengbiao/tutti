@@ -829,6 +829,7 @@ export const AgentGUINode = memo(function AgentGUINode({
       usageContextWindowLabel: t("agentHost.agentGui.usageContextWindowLabel"),
       usageTokensLabel: t("agentHost.agentGui.usageTokensLabel"),
       usageLimitsLabel: t("agentHost.agentGui.usageLimitsLabel"),
+      compactContextLabel: t("agentHost.agentGui.compactContext"),
       usageCompactAction: t("agentHost.agentGui.usageCompactAction"),
       planImplementationLead: t("agentHost.agentGui.planImplementationLead"),
       planImplementationConfirm: t(
