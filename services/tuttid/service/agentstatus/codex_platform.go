@@ -35,29 +35,100 @@ func codexNpmPlatformDir(goos, goarch string) (string, bool) {
 	return "codex-" + nodeOS + "-" + nodeArch, true
 }
 
-// codexPlatformBinaryPath returns the absolute path to the platform-specific
-// codex binary inside an installed @openai/codex package directory.
+// codexVendorTargetTriple returns the Rust target triple codex uses to namespace
+// the native binary inside the platform subpackage's vendor/ directory, e.g.
+// "aarch64-apple-darwin". This mirrors the resolution in the @openai/codex
+// launcher (bin/codex.js), which joins vendor/<triple>/bin/codex. ok is false
+// for platforms codex does not publish a vendored binary for.
+func codexVendorTargetTriple(goos, goarch string) (string, bool) {
+	switch goos {
+	case "darwin":
+		switch goarch {
+		case "amd64":
+			return "x86_64-apple-darwin", true
+		case "arm64":
+			return "aarch64-apple-darwin", true
+		}
+	case "linux":
+		switch goarch {
+		case "amd64":
+			return "x86_64-unknown-linux-musl", true
+		case "arm64":
+			return "aarch64-unknown-linux-musl", true
+		}
+	case "windows":
+		switch goarch {
+		case "amd64":
+			return "x86_64-pc-windows-msvc", true
+		case "arm64":
+			return "aarch64-pc-windows-msvc", true
+		}
+	}
+	return "", false
+}
+
+func codexPlatformBinaryName(goos string) string {
+	if goos == "windows" {
+		return "codex.exe"
+	}
+	return "codex"
+}
+
+// codexPlatformBinaryPath returns the legacy absolute path to the
+// platform-specific codex binary, at the subpackage root. Older codex releases
+// shipped the binary here directly.
 func codexPlatformBinaryPath(codexPkgDir, goos, goarch string) (string, bool) {
 	dir, ok := codexNpmPlatformDir(goos, goarch)
 	if !ok {
 		return "", false
 	}
-	binName := "codex"
-	if goos == "windows" {
-		binName = "codex.exe"
+	return filepath.Join(codexPkgDir, "node_modules", "@openai", dir, codexPlatformBinaryName(goos)), true
+}
+
+// codexPlatformVendorBinaryPath returns the absolute path to the
+// platform-specific codex binary under the vendor/ layout used by codex >= 0.140
+// (e.g. .../@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex).
+func codexPlatformVendorBinaryPath(codexPkgDir, goos, goarch string) (string, bool) {
+	dir, dirOK := codexNpmPlatformDir(goos, goarch)
+	triple, tripleOK := codexVendorTargetTriple(goos, goarch)
+	if !dirOK || !tripleOK {
+		return "", false
 	}
-	return filepath.Join(codexPkgDir, "node_modules", "@openai", dir, binName), true
+	return filepath.Join(codexPkgDir, "node_modules", "@openai", dir, "vendor", triple, "bin", codexPlatformBinaryName(goos)), true
+}
+
+// codexPlatformBinaryCandidates lists the absolute paths where the
+// platform-specific codex binary may live inside an installed @openai/codex
+// package directory, newest layout first. codex changed its subpackage layout
+// (the native binary moved from the package root into vendor/<triple>/bin/), so
+// the resolver must accept both to stay compatible across versions.
+func codexPlatformBinaryCandidates(codexPkgDir, goos, goarch string) []string {
+	var candidates []string
+	if vendor, ok := codexPlatformVendorBinaryPath(codexPkgDir, goos, goarch); ok {
+		candidates = append(candidates, vendor)
+	}
+	if legacy, ok := codexPlatformBinaryPath(codexPkgDir, goos, goarch); ok {
+		candidates = append(candidates, legacy)
+	}
+	return candidates
 }
 
 // codexPlatformBinaryComplete reports whether the platform-specific codex
 // binary is present and executable inside the given @openai/codex package
-// directory. It returns the resolved binary path alongside the verdict.
+// directory. It returns the resolved binary path alongside the verdict; when no
+// candidate is executable it returns the preferred (newest-layout) path so the
+// detail message points at where the binary is expected.
 func (s Service) codexPlatformBinaryComplete(codexPkgDir, goos, goarch string) (string, bool) {
-	path, ok := codexPlatformBinaryPath(codexPkgDir, goos, goarch)
-	if !ok {
+	candidates := codexPlatformBinaryCandidates(codexPkgDir, goos, goarch)
+	if len(candidates) == 0 {
 		return "", false
 	}
-	return path, s.executableFile(path)
+	for _, path := range candidates {
+		if s.executableFile(path) {
+			return path, true
+		}
+	}
+	return candidates[0], false
 }
 
 func codexPackageDirForBinary(binaryPath string) string {
