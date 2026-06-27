@@ -22,10 +22,12 @@
 ## File Structure
 
 **Feature A — 消息中心标题**
+
 - Modify: `packages/agent/gui/agent-message-center/workspaceAgentMessageCenterModel.ts`
 - Test: `packages/agent/gui/agent-message-center/workspaceAgentMessageCenterModel.spec.ts`
 
 **Feature B — 图片右键复制**
+
 - Create: `packages/ui/system/src/components/context-menu/context-menu.tsx`
 - Modify: `packages/ui/system/src/components/index.ts`
 - Create: `packages/agent/gui/app/renderer/components/ui/context-menu.tsx` (re-export)
@@ -36,6 +38,7 @@
 - Modify: `packages/agent/gui/app/renderer/i18n/locales/{en,zh-CN}.ts`
 
 **Feature C — 压缩按钮**
+
 - Modify: `packages/agent/gui/agent-gui/agentGuiNode/AgentComposer.tsx` (`AgentUsageChip` line ~449-551, render site ~2733)
 - Modify: `packages/agent/gui/app/renderer/i18n/locales/{en,zh-CN}.ts`
 
@@ -46,10 +49,12 @@
 ### Task A1: latestUserMessageSummary + 标题优先级
 
 **Files:**
+
 - Modify: `packages/agent/gui/agent-message-center/workspaceAgentMessageCenterModel.ts:266-275` (resolveSessionTitle), `:281-371` (analysis), `:114-117` (call site)
 - Test: `packages/agent/gui/agent-message-center/workspaceAgentMessageCenterModel.spec.ts`
 
 **Interfaces:**
+
 - Produces: `MessageCenterSessionMessageAnalysis.latestUserMessageSummary: string`
 - Produces: `resolveSessionTitle(session, latestUserMessageSummary, firstUserMessageSummary): string`
 
@@ -99,40 +104,48 @@ Expected: FAIL — 实际为 `"AI generated summary"`（当前 session.title 优
 在 `analyzeMessageCenterSessionMessages`（line ~303 起的声明区）加变量，并在遍历 user 分支里更新。
 
 声明区（紧邻 `let firstUserMessageSummary = "";`）：
+
 ```ts
-  let latestUserMessageSummary = "";
+let latestUserMessageSummary = "";
 ```
+
 遍历内 user 分支（替换 line 312-314 的 if 块）：
+
 ```ts
-    if (isUserMessageRole(message.role)) {
-      const summary = messageSummary(message);
-      if (!firstUserMessageSummary && summary) {
-        firstUserMessageSummary = summary;
-      }
-      if (summary) {
-        latestUserMessageSummary = summary;
-      }
-    }
+if (isUserMessageRole(message.role)) {
+  const summary = messageSummary(message);
+  if (!firstUserMessageSummary && summary) {
+    firstUserMessageSummary = summary;
+  }
+  if (summary) {
+    latestUserMessageSummary = summary;
+  }
+}
 ```
+
 返回对象（line ~364）加字段：
+
 ```ts
-  return {
-    firstUserMessageSummary,
-    latestUserMessageSummary,
-    latestDigestAgentMessage,
-    latestAgentMessage,
-    latestTurnOutcome: latestOutcome?.outcome ?? null,
-    pendingPrompt: latestPendingPrompt?.prompt ?? null
-  };
+return {
+  firstUserMessageSummary,
+  latestUserMessageSummary,
+  latestDigestAgentMessage,
+  latestAgentMessage,
+  latestTurnOutcome: latestOutcome?.outcome ?? null,
+  pendingPrompt: latestPendingPrompt?.prompt ?? null
+};
 ```
+
 在 interface `MessageCenterSessionMessageAnalysis`（line ~281）加：
+
 ```ts
-  latestUserMessageSummary: string;
+latestUserMessageSummary: string;
 ```
 
 - [ ] **Step 4: 改标题优先级**
 
 替换 `resolveSessionTitle`（line 266-275）：
+
 ```ts
 function resolveSessionTitle(
   session: AgentActivitySession,
@@ -150,13 +163,15 @@ function resolveSessionTitle(
   return firstUserMessageSummary || session.provider || session.agentSessionId;
 }
 ```
+
 更新调用点（line 114-117）：
+
 ```ts
-      const title = resolveSessionTitle(
-        session,
-        messageAnalysis.latestUserMessageSummary,
-        messageAnalysis.firstUserMessageSummary
-      );
+const title = resolveSessionTitle(
+  session,
+  messageAnalysis.latestUserMessageSummary,
+  messageAnalysis.firstUserMessageSummary
+);
 ```
 
 - [ ] **Step 5: 跑新测试确认通过**
@@ -190,16 +205,19 @@ git commit -m "feat(agent-gui): show latest user task as message-center title"
 ### Task B1: ContextMenu 原语（复用 radix-ui umbrella）
 
 **Files:**
+
 - Create: `packages/ui/system/src/components/context-menu/context-menu.tsx`
 - Modify: `packages/ui/system/src/components/index.ts:10` 区域
 - Create: `packages/agent/gui/app/renderer/components/ui/context-menu.tsx`
 
 **Interfaces:**
+
 - Produces: `ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem`（从 `@tutti-os/ui-system` 导出）
 
 - [ ] **Step 1: 写失败测试**
 
 Create `packages/ui/system/src/components/context-menu/context-menu.spec.tsx`:
+
 ```tsx
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -235,6 +253,7 @@ Expected: FAIL — 模块不存在。
 - [ ] **Step 3: 实现原语（镜像 dropdown-menu.tsx）**
 
 Create `packages/ui/system/src/components/context-menu/context-menu.tsx`:
+
 ```tsx
 import * as React from "react";
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui";
@@ -264,10 +283,17 @@ function ContextMenuContent({
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
   return (
     <ContextMenuPrimitive.Portal>
-      <ContextMenuPrimitive.Content asChild data-slot="context-menu-content" {...props}>
+      <ContextMenuPrimitive.Content
+        asChild
+        data-slot="context-menu-content"
+        {...props}
+      >
         <MenuSurface
           data-slot="context-menu-content"
-          className={cn("z-50 min-w-32 overflow-x-hidden overflow-y-auto", className)}
+          className={cn(
+            "z-50 min-w-32 overflow-x-hidden overflow-y-auto",
+            className
+          )}
           style={{ zIndex: "var(--z-popover)", ...style }}
         >
           {children}
@@ -291,7 +317,12 @@ function ContextMenuItem({
       data-inset={inset}
       data-slot="context-menu-item"
       data-variant={variant}
-      className={cn("group/context-menu-item", menuItemClassName, "data-inset:pl-7", className)}
+      className={cn(
+        "group/context-menu-item",
+        menuItemClassName,
+        "data-inset:pl-7",
+        className
+      )}
       {...props}
     />
   );
@@ -303,14 +334,17 @@ export { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger };
 - [ ] **Step 4: 从 ui/system barrel 导出**
 
 在 `packages/ui/system/src/components/index.ts` 第 10 行 `export * from "./dropdown-menu";` 后加一行：
+
 ```ts
 export * from "./context-menu/context-menu";
 ```
+
 （注意：dropdown-menu 的导出路径是目录简写 `./dropdown-menu`，因其有 `index`；context-menu 直写文件路径即可。若该目录也加了 `index.ts` 则用 `./context-menu`。）
 
 - [ ] **Step 5: agent/gui 侧 re-export（镜像 ui/dropdown-menu.tsx）**
 
 Create `packages/agent/gui/app/renderer/components/ui/context-menu.tsx`:
+
 ```tsx
 export {
   ContextMenu,
@@ -337,10 +371,12 @@ git commit -m "feat(ui-system): add ContextMenu primitive from radix-ui umbrella
 ### Task B2: copyImageToClipboard 工具
 
 **Files:**
+
 - Create: `packages/agent/gui/shared/agentConversation/lib/copyImageToClipboard.ts`
 - Test: `packages/agent/gui/shared/agentConversation/lib/copyImageToClipboard.spec.ts`
 
 **Interfaces:**
+
 - Produces: `copyImageToClipboard(src: string): Promise<boolean>`
 
 - [ ] **Step 1: 写失败测试**
@@ -387,7 +423,12 @@ describe("copyImageToClipboard", () => {
     const write = vi.fn().mockRejectedValue(new Error("denied"));
     const pngBlob = new Blob(["png"], { type: "image/png" });
     vi.stubGlobal("navigator", { clipboard: { write } });
-    vi.stubGlobal("ClipboardItem", class { constructor(_: unknown) {} });
+    vi.stubGlobal(
+      "ClipboardItem",
+      class {
+        constructor(_: unknown) {}
+      }
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ blob: () => Promise.resolve(pngBlob) })
@@ -447,6 +488,7 @@ export async function copyImageToClipboard(src: string): Promise<boolean> {
   }
 }
 ```
+
 注：非 png 的 canvas 转换路径依赖 `createImageBitmap`/`canvas.toBlob`，jsdom 不实现，故只在单测覆盖 png 直传与失败回退；非 png 路径靠手动验证（见 Task B3 收尾）。
 
 - [ ] **Step 4: 跑测试确认通过**
@@ -465,22 +507,27 @@ git commit -m "feat(agent-gui): add copyImageToClipboard helper"
 ### Task B3: 套到两个会话图片渲染点 + i18n
 
 **Files:**
+
 - Modify: `packages/agent/gui/app/renderer/i18n/locales/en.ts:540` 区域、`zh-CN.ts:496` 区域
 - Modify: `packages/agent/gui/shared/agentConversation/components/AgentMessageBlock.tsx:312-360`
 - Modify: `packages/agent/gui/shared/agentConversation/components/tool-renderers/AgentImageGenerationContent.tsx:117-120`
 
 **Interfaces:**
+
 - Consumes: `copyImageToClipboard` (B2), `ContextMenu*` (B1)
 
 - [ ] **Step 1: 加 i18n key**
 
 `en.ts`（`agentHost.agentGui` 内，紧邻 `copyMessage: "Copy message",`）：
+
 ```ts
       copyImage: "Copy image",
       imageCopied: "Image copied",
       copyImageFailed: "Couldn't copy image",
 ```
+
 `zh-CN.ts`（紧邻 `copyMessage: "复制消息",`）：
+
 ```ts
       copyImage: "复制图片",
       imageCopied: "已复制图片",
@@ -490,6 +537,7 @@ git commit -m "feat(agent-gui): add copyImageToClipboard helper"
 - [ ] **Step 2: 写一个共享包装组件（在 AgentMessageBlock.tsx 内）**
 
 在 `AgentMessageBlock.tsx` 顶部加 import：
+
 ```tsx
 import {
   ContextMenu,
@@ -499,7 +547,9 @@ import {
 } from "../../../app/renderer/components/ui/context-menu";
 import { copyImageToClipboard } from "../lib/copyImageToClipboard";
 ```
+
 在 `AgentUserImageGrid` 上方加包装组件：
+
 ```tsx
 function ConversationImageContextMenu({
   src,
@@ -523,6 +573,7 @@ function ConversationImageContextMenu({
   );
 }
 ```
+
 （toast：若该模块已有 toast 通道则 `.then(ok => toast(ok ? imageCopied : copyImageFailed))`；若无，保留静默复制——与现有 `copyImageToClipboard` 布尔返回一致，不阻塞。导出 hook：实现者按文件内现有 toast 用法决定，无则省略。）
 
 - [ ] **Step 3: 包住用户图片**（AgentUserImageGrid，line 338-344 的 ZoomableImage）
@@ -574,19 +625,24 @@ git commit -m "feat(agent-gui): right-click copy on conversation images"
 ### Task C1: AgentUsageChip 加压缩按钮
 
 **Files:**
+
 - Modify: `packages/agent/gui/agent-gui/agentGuiNode/AgentComposer.tsx`（`AgentUsageChip` line 449-551，render site line 2733-2748）
 - Modify: `packages/agent/gui/app/renderer/i18n/locales/{en,zh-CN}.ts`
 
 **Interfaces:**
+
 - Consumes: 已存在的 `onSubmit`、`textPromptContent`、`compactSupported`、`hasCompactableContext` 与 busy/disabled 状态。
 
 - [ ] **Step 1: 加 i18n key**
 
 `en.ts`（`agentHost.agentGui` 内）：
+
 ```ts
       compactContext: "Compact context",
 ```
+
 `zh-CN.ts`：
+
 ```ts
       compactContext: "压缩上下文",
 ```
@@ -595,6 +651,7 @@ git commit -m "feat(agent-gui): right-click copy on conversation images"
 
 在 AgentComposer 的现有测试套件（`AgentGUINode.spec.tsx` 或 composer 专属 spec，沿用其渲染工具）追加：当 `compactSupported && hasCompactableContext && !busy` 时，usage popover 内渲染 `data-testid="agent-gui-compact-button"`；点击后调用 `onSubmit`，参数为 `/compact` 文本 prompt。不支持/ busy 时不渲染该 button。
 断言要点：
+
 ```ts
 expect(screen.queryByTestId("agent-gui-compact-button")).toBeInTheDocument();
 // click
@@ -609,6 +666,7 @@ Expected: FAIL — 无该 testid。
 - [ ] **Step 4: 扩展 AgentUsageChip 的 props**
 
 `AgentUsageChip` 参数（line 449-470）加：
+
 ```ts
   onCompact,
   compactEnabled
@@ -635,46 +693,52 @@ Expected: FAIL — 无该 testid。
 - [ ] **Step 5: 在 PopoverContent 底部渲染按钮**
 
 在 `</div>` 关闭 `flex min-w-0 flex-col gap-3` 之前（line ~546-547），加：
+
 ```tsx
-          {compactEnabled && onCompact ? (
-            <button
-              type="button"
-              data-testid="agent-gui-compact-button"
-              className="nodrag inline-flex items-center justify-center rounded-[6px] bg-[var(--transparency-block)] px-2 py-1 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-background-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [-webkit-app-region:no-drag]"
-              onClick={onCompact}
-            >
-              {labels.compactContextLabel}
-            </button>
-          ) : null}
+{
+  compactEnabled && onCompact ? (
+    <button
+      type="button"
+      data-testid="agent-gui-compact-button"
+      className="nodrag inline-flex items-center justify-center rounded-[6px] bg-[var(--transparency-block)] px-2 py-1 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-background-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [-webkit-app-region:no-drag]"
+      onClick={onCompact}
+    >
+      {labels.compactContextLabel}
+    </button>
+  ) : null;
+}
 ```
 
 - [ ] **Step 6: 在 render site 透传**（line 2733-2748）
 
 ```tsx
-              {usage && usage.percentUsed !== null ? (
-                <AgentUsageChip
-                  percentUsed={usage.percentUsed}
-                  usedTokens={usage.usedTokens}
-                  totalTokens={usage.totalTokens}
-                  limits={slashStatus?.limits ?? []}
-                  tooltipsEnabled={!previewMode}
-                  compactEnabled={
-                    (compactSupported ?? false) &&
-                    hasCompactableContext &&
-                    !settingsControlsDisabled
-                  }
-                  onCompact={() => onSubmit(textPromptContent("/compact"))}
-                  labels={{
-                    usageChipLabel: labels.usageChipLabel,
-                    usageTooltipLabel: labels.usageTooltipLabel,
-                    usagePopoverTitle: labels.usagePopoverTitle,
-                    usageContextWindowLabel: labels.usageContextWindowLabel,
-                    usageLimitsLabel: labels.usageLimitsLabel,
-                    compactContextLabel: labels.compactContextLabel
-                  }}
-                />
-              ) : null}
+{
+  usage && usage.percentUsed !== null ? (
+    <AgentUsageChip
+      percentUsed={usage.percentUsed}
+      usedTokens={usage.usedTokens}
+      totalTokens={usage.totalTokens}
+      limits={slashStatus?.limits ?? []}
+      tooltipsEnabled={!previewMode}
+      compactEnabled={
+        (compactSupported ?? false) &&
+        hasCompactableContext &&
+        !settingsControlsDisabled
+      }
+      onCompact={() => onSubmit(textPromptContent("/compact"))}
+      labels={{
+        usageChipLabel: labels.usageChipLabel,
+        usageTooltipLabel: labels.usageTooltipLabel,
+        usagePopoverTitle: labels.usagePopoverTitle,
+        usageContextWindowLabel: labels.usageContextWindowLabel,
+        usageLimitsLabel: labels.usageLimitsLabel,
+        compactContextLabel: labels.compactContextLabel
+      }}
+    />
+  ) : null;
+}
 ```
+
 注：`compactSupported`、`hasCompactableContext`、`settingsControlsDisabled` 已在 AgentComposer 作用域内（props line 165-166/681-682）。`labels.compactContextLabel` 需在 AgentComposerProps 的 labels 类型定义里补声明，并在装配 labels 的上层（i18n → composer labels 映射处）接上 `agentHost.agentGui.compactContext`。
 
 - [ ] **Step 7: 跑测试确认通过**
@@ -709,3 +773,9 @@ git commit -m "feat(agent-gui): add compact-context button to usage popover"
 - **Spec coverage:** 三特性各有任务覆盖（A=A1，B=B1/B2/B3，C=C1）；i18n、测试、doc-impact 均在任务内。
 - **Placeholder scan:** 代码步骤均给完整代码；toast 通道与 labels 装配处依赖文件内既有约定，已注明定位方式而非留 TODO。
 - **Type consistency:** `copyImageToClipboard`、`ConversationImageContextMenu`、`ContextMenu*` 命名在 B1/B2/B3 间一致；`compactEnabled`/`onCompact`/`compactContextLabel` 在 C1 内一致。
+
+---
+
+## Feature D — 持久化消息中心筛选选择（用户补充需求 2026-06-27）
+
+记住 `WorkspaceAgentMessageCenterPanel` 的筛选选择（分组 `groupBy`、状态筛选 `statusFilters`、provider 筛选 `providerFilters`），跨 App 重启保留。机制：localStorage，镜像 `packages/workspace/file-manager/src/ui/workspaceFileManagerArrangeMode.ts` 的 `typeof window` 守卫 + read/write 先例。详见 task-D1-brief.md。
