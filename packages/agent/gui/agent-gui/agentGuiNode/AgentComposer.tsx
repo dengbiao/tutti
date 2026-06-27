@@ -33,6 +33,7 @@ import {
 } from "../../app/renderer/components/ui/tooltip";
 import { ZoomableImage } from "../../app/renderer/components/ZoomableImage";
 import type { AgentConversationPromptVM } from "../../shared/agentConversation/contracts/agentConversationVM";
+import { ConversationImageContextMenu } from "../../shared/agentConversation/components/ConversationImageContextMenu";
 import { cn } from "../../app/renderer/lib/utils";
 import { AddIcon, Select, SelectTrigger } from "@tutti-os/ui-system";
 import { ListChecks, X } from "lucide-react";
@@ -2433,12 +2434,14 @@ export function AgentComposer({
                           image.uploadError ? "true" : undefined
                         }
                       >
-                        <ZoomableImage
-                          src={image.previewUrl}
-                          alt={image.name}
-                          className="size-full object-cover"
-                          draggable={false}
-                        />
+                        <ConversationImageContextMenu src={image.previewUrl}>
+                          <ZoomableImage
+                            src={image.previewUrl}
+                            alt={image.name}
+                            className="size-full object-cover"
+                            draggable={false}
+                          />
+                        </ConversationImageContextMenu>
                         {image.uploading ? (
                           <div
                             className="absolute inset-0 grid place-items-center bg-[color-mix(in_srgb,var(--background-fronted)_62%,transparent)]"

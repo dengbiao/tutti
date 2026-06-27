@@ -371,6 +371,53 @@ describe("AgentComposer", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("wraps composer draft images in a right-click copy menu", () => {
+    render(
+      <AgentComposer
+        workspaceId="workspace-1"
+        currentUserId="user-1"
+        provider="codex"
+        draftContent={createDraft("", [
+          {
+            id: "img-1",
+            name: "earth.png",
+            mimeType: "image/png",
+            previewUrl: "blob:preview-1",
+            uploading: false
+          }
+        ])}
+        availableCommands={[] satisfies readonly AgentHostAgentSessionCommand[]}
+        disabled={false}
+        submitDisabled={false}
+        placeholder="placeholder"
+        composerSettings={createComposerSettings()}
+        queuedPrompts={[]}
+        drainingQueuedPromptId={null}
+        canQueueWhileBusy={false}
+        showStopButton={false}
+        activePrompt={null}
+        isInterrupting={false}
+        isSendingTurn={false}
+        isSubmittingPrompt={false}
+        labels={createLabels()}
+        workspaceUserProjectI18n={workspaceUserProjectI18n}
+        onDraftContentChange={vi.fn()}
+        onSettingsChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onSendQueuedPromptNext={vi.fn()}
+        onRemoveQueuedPrompt={vi.fn()}
+        onEditQueuedPrompt={vi.fn()}
+        onInterruptCurrentTurn={vi.fn()}
+        onSubmitInteractivePrompt={vi.fn()}
+      />
+    );
+
+    const drafts = screen.getByTestId("agent-gui-composer-image-drafts");
+    expect(
+      drafts.querySelector('[data-slot="context-menu-trigger"]')
+    ).not.toBeNull();
+  });
+
   it("hides the permission dropdown and the plan badge when only plan mode is supported and inactive", () => {
     render(
       <AgentComposer
