@@ -419,10 +419,10 @@ function WorkspaceAgentMessageCenterAction({
           provider: item.provider,
           workspaceId: workspace.id
         },
-        // The message center panel and trigger badge already surface
-        // outcomes in-app; only the OS face should notify, and only while
-        // the window is in the background (composite checks visibility).
-        presentation: "background-only",
+        // Surface a completed/failed conversation on whichever face is
+        // appropriate: a foreground toast while the app is visible, and an OS
+        // notification while it is backgrounded (composite checks visibility).
+        presentation: notification.presentation,
         title: t(
           notification.level === "success"
             ? "workspace.agentMessageCenter.outcomeNotificationCompletedTitle"

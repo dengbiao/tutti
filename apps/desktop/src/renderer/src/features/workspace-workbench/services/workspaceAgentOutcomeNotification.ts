@@ -1,4 +1,5 @@
 import type { WorkspaceAgentMessageCenterItem } from "@tutti-os/agent-gui/agent-message-center";
+import type { CompositeNotificationPresentation } from "@renderer/lib/compositeNotificationService";
 
 export interface WorkspaceAgentOutcomeNotification {
   agentName: string;
@@ -6,6 +7,13 @@ export interface WorkspaceAgentOutcomeNotification {
   body: string;
   conversationTitle: string;
   level: "error" | "success";
+  /**
+   * Notification face to use. "default" surfaces a foreground toast while the
+   * app is visible and an OS notification while it is backgrounded, so a
+   * completed/failed conversation is noticed whether or not the user is
+   * currently looking at the app.
+   */
+  presentation: CompositeNotificationPresentation;
 }
 
 export interface WorkspaceAgentOutcomeNotificationLabels {
@@ -30,7 +38,8 @@ export function buildWorkspaceAgentOutcomeNotification(
     agentSessionId: item.agentSessionId,
     body: level === "success" ? labels.completedBody : labels.failedBody,
     conversationTitle: item.title.trim(),
-    level
+    level,
+    presentation: "default"
   };
 }
 

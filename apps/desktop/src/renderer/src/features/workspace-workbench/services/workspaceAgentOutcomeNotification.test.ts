@@ -24,7 +24,8 @@ test("outcome notification builder reports completed turns as success", () => {
       agentSessionId: "session-1",
       body: "The agent finished this run.",
       conversationTitle: "Build feature",
-      level: "success"
+      level: "success",
+      presentation: "default"
     }
   );
 });
@@ -50,7 +51,8 @@ test("outcome notification builder reports latest completed turn outcomes while 
       agentSessionId: "session-1",
       body: "The agent finished this run.",
       conversationTitle: "Build feature",
-      level: "success"
+      level: "success",
+      presentation: "default"
     }
   );
 });
@@ -76,7 +78,8 @@ test("outcome notification builder reports terminal session status instead of st
       agentSessionId: "session-1",
       body: "The agent run failed.",
       conversationTitle: "Build feature",
-      level: "error"
+      level: "error",
+      presentation: "default"
     }
   );
 });
@@ -89,9 +92,20 @@ test("outcome notification builder reports failed turns as error", () => {
       agentSessionId: "session-1",
       body: "The agent run failed.",
       conversationTitle: "Build feature",
-      level: "error"
+      level: "error",
+      presentation: "default"
     }
   );
+});
+
+test("outcome notification builder surfaces completed/failed outcomes on the default (foreground + background) face", () => {
+  for (const status of ["completed", "failed"] as const) {
+    const notification = buildWorkspaceAgentOutcomeNotification(
+      item({ status }),
+      labels
+    );
+    assert.equal(notification?.presentation, "default");
+  }
 });
 
 test("outcome notification builder stays silent for canceled turns", () => {
