@@ -235,9 +235,11 @@ export const en = {
       idleStatus: "Idle",
       outcomeNotificationCompletedBody:
         "The agent finished this run. Click to open the session.",
+      outcomeNotificationCompletedStatus: "Completed",
       outcomeNotificationCompletedTitle: "{{title}} completed",
       outcomeNotificationFailedBody:
         "The agent run failed. Click to open the session.",
+      outcomeNotificationFailedStatus: "Failed",
       outcomeNotificationFailedTitle: "{{title}} failed",
       waitingNotificationAction: "Review",
       waitingNotificationCommand: "Command",
